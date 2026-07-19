@@ -40,7 +40,10 @@ a{color:var(--coral); text-decoration:none} a:hover{color:var(--pink)}
 @keyframes ldslide{0%{transform:translateX(-110%)} 100%{transform:translateX(400%)}}
 
 /* ---------- header ---------- */
-header{position:sticky; top:0; z-index:50; background:rgba(35,34,39,.82); backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
+header{position:sticky; top:0; z-index:50; background:rgba(35,34,39,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
+@media (max-width:760px){
+  header, .tl-sticky{backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background:rgba(35,34,39,.97) !important}
+}
 .hwrap{max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:16px}
 .hwrap img.logo{height:28px; display:block; filter:brightness(0) invert(1) opacity(.92)}
 .hdiv{width:1px; height:24px; background:var(--line)}
@@ -102,7 +105,8 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 #map{width:min(100%,560px); height:auto; display:block}
 .upz{fill:var(--bg2); stroke:rgba(214,214,214,.09); stroke-width:.4; vector-effect:non-scaling-stroke}
 .loc-core{fill:var(--coral); stroke:var(--bg); stroke-width:1; opacity:0; cursor:pointer; transition:fill .25s; transform-box:fill-box; transform-origin:center}
-.loc-core:hover{fill:var(--pink)}
+.loc-core:hover, .loc-core.hov{fill:var(--pink)}
+.loc-hit{fill:none; pointer-events:all; cursor:pointer}
 .loc-core.in{animation:pop .8s cubic-bezier(.2,1.3,.4,1) forwards}
 @keyframes pop{0%{opacity:0; transform:scale(0)} 60%{opacity:1; transform:scale(1.32)} 100%{opacity:.95; transform:scale(1)}}
 .ripple{fill:none; stroke:var(--coral); stroke-width:1.6; opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center}
@@ -375,6 +379,7 @@ for(let i=16;i<=36;i++){
 
 /* ---------- hero background wall ---------- */
 const UNK = '16_2.png';
+const THUMB = f => 'assets/img/martyrs/thumb/' + f.replace(/\.png$/,'.jpg');
 (function(){
   const faces=[];
   for(const k of Object.keys(D.days)){ for(const f of D.days[k].imgs) if(f!==UNK) faces.push(f); }
@@ -393,7 +398,7 @@ const UNK = '16_2.png';
     const frag = document.createDocumentFragment();
     tiles.forEach((f,idx)=>{
       const im = document.createElement('img');
-      im.src = 'assets/img/martyrs/'+f;
+      im.src = THUMB(f); im.decoding = 'async';
       im.className = 'tile';
       im.alt=''; im.loading='lazy';
       im.style.animationDelay = ((idx%cols)*0.03 + Math.floor(idx/cols)*0.05)+'s';
@@ -478,16 +483,18 @@ function renderDots(i){
     const delay = ((k%14)*0.05).toFixed(2);
     const sx = ((r+46+r*2.2)/r).toFixed(2);
     html += `<circle class="ripple in" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="--sx:${sx};--rd:${delay}s"></circle>`
-          + `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s"></circle>`;
+          + `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s"></circle>`
+          + `<circle class="loc-hit" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(r+9,15).toFixed(1)}"></circle>`;
   });
   gDots.node().innerHTML = html; // one DOM write instead of hundreds
 }
 const dotsEl = gDots.node();
-const dotLoc = e => { const t = e.target.closest && e.target.closest('.loc-core'); return t ? curLocs[+t.getAttribute('data-k')] : null; };
-dotsEl.addEventListener('pointerover', e=>{ const L=dotLoc(e); if(L) showTip(e,L); });
-dotsEl.addEventListener('pointermove', e=>{ if(dotLoc(e)) moveTip(e); });
-dotsEl.addEventListener('pointerout', e=>{ if(dotLoc(e)) hideTip(); });
-dotsEl.addEventListener('click', e=>{ const L=dotLoc(e); if(L) showTip(e,L); });
+const dotEl = e => e.target.closest && e.target.closest('.loc-hit,.loc-core');
+const coreOf = t => dotsEl.querySelector(`.loc-core[data-k="${t.getAttribute('data-k')}"]`);
+dotsEl.addEventListener('pointerover', e=>{ const t=dotEl(e); if(!t) return; const c=coreOf(t); if(c) c.classList.add('hov'); showTip(e, curLocs[+t.getAttribute('data-k')]); });
+dotsEl.addEventListener('pointermove', e=>{ if(dotEl(e)) moveTip(e); });
+dotsEl.addEventListener('pointerout', e=>{ const t=dotEl(e); if(!t) return; const c=coreOf(t); if(c) c.classList.remove('hov'); hideTip(); });
+dotsEl.addEventListener('click', e=>{ const t=dotEl(e); if(t) showTip(e, curLocs[+t.getAttribute('data-k')]); });
 function showTip(e,L){
   tip.innerHTML = `<b>${L.n}</b> ${L.n===1?'life':'lives'} lost<span class="f">${L.f} · ${L.dt}</span>`;
   tip.classList.add('on'); moveTip(e);
@@ -508,7 +515,7 @@ function moveTip(e){
   y=Math.min(Math.max(8,y), innerHeight-th-8);
   tip.style.left=x+'px'; tip.style.top=y+'px';
 }
-document.addEventListener('pointerdown', e=>{ if(!e.target.closest('.loc-core')) hideTip(); });
+document.addEventListener('pointerdown', e=>{ if(!e.target.closest('.loc-hit,.loc-core')) hideTip(); });
 function hideTip(){ tip.classList.remove('on'); }
 
 /* ---------- counter ---------- */
@@ -564,7 +571,7 @@ function buildFinale(){
   let html='';
   for(let y=y0;y<y1;y+=step) for(let x=x0;x<x1;x+=step){
     const f = faces[Math.floor(Math.random()*faces.length)];
-    html += `<image href="assets/img/martyrs/${f}" x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${ts}" height="${ts}" preserveAspectRatio="xMidYMid slice"></image>`;
+    html += `<image href="${THUMB(f)}" x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${ts}" height="${ts}" preserveAspectRatio="xMidYMid slice"></image>`;
   }
   gFin.node().innerHTML = html; // built once, reused on every day-36 visit
   gFin.style('opacity',0).style('filter','grayscale(1) brightness(.95)');
@@ -655,7 +662,7 @@ function renderPanel(i){
     $('#faces').hidden = false;
     known.forEach((f,k)=>{
       const im=document.createElement('img');
-      im.src='assets/img/martyrs/'+f; im.alt='Martyr of '+label(i); im.loading='lazy';
+      im.src=THUMB(f); im.alt='Martyr of '+label(i); im.loading='lazy'; im.decoding='async';
       im.style.animationDelay = (k*0.07)+'s';
       fr.appendChild(im);
     });
@@ -698,7 +705,7 @@ function selectDay(i, first=false){
   clearFinale();
   renderDots(i);
   runCounter(i);
-  renderNames(i);
+  setTimeout(()=>renderNames(i), 80); // let dots paint first on slow devices
   if(i===36) runFinale();
   if(!first){
     const tlEl = document.querySelector('.tl-sticky');
