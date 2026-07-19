@@ -1,5 +1,6 @@
 // @ds-adherence-ignore -- omelette starter scaffold (raw elements/hex/px by design)
 // Copied omelette starter. Re-running copy_starter_component with this kind overwrites this file with the latest version (page content is unaffected).
+// NOTE(memorial theme): empty-state colors adjusted for dark background — re-apply if this file is re-copied.
 /* BEGIN USAGE */
 /**
  * <image-slot> — user-fillable image placeholder.
@@ -284,9 +285,9 @@
     // width instead of letting the slot collapse to zero height.
     // Explicit width/height on the element override all of this.
     ':host{display:block;position:relative;' +
-    '  font:13px/1.3 system-ui,-apple-system,sans-serif;color:rgba(0,0,0,.55);' +
+    '  font:13px/1.3 system-ui,-apple-system,sans-serif;color:rgba(247,245,242,.42);' +
     '  width:100%;height:100%;aspect-ratio:3/2}' +
-    '.frame{position:absolute;inset:0;overflow:hidden;background:rgba(0,0,0,.04)}' +
+    '.frame{position:absolute;inset:0;overflow:hidden;background:rgba(255,255,255,.035)}' +
     // .frame img (clipped) and .spill (unclipped ghost + handles) share the
     // same left/top/width/height in frame-%, computed by _applyView(), so the
     // inside-mask crop and the outside-mask spill stay pixel-aligned.
@@ -325,7 +326,7 @@
     '.empty:hover .sub u{color:rgba(0,0,0,.75);text-decoration-color:currentColor}' +
     ':host([data-over]) .frame{outline:2px solid #c96442;outline-offset:-2px;' +
     '  background:rgba(201,100,66,.10)}' +
-    '.ring{position:absolute;inset:0;pointer-events:none;border:1.5px dashed rgba(0,0,0,.25);' +
+    '.ring{position:absolute;inset:0;pointer-events:none;border:1.5px dashed rgba(247,245,242,.16);' +
     '  transition:border-color .12s}' +
     ':host([data-over]) .ring{border-color:#c96442}' +
     ':host([data-filled]) .ring{display:none}' +
