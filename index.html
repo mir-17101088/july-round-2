@@ -110,10 +110,10 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .loc-core:hover, .loc-core.hov{fill:var(--pink)}
 .loc-hit{fill:none; pointer-events:all; cursor:pointer}
 .loc-core.in{animation:pop .45s var(--ease-out) forwards}
-@keyframes pop{0%{opacity:0; transform:scale(.5)} 100%{opacity:.95; transform:scale(1)}}
+@keyframes pop{0%{opacity:0; transform:scale(var(--d0,.55))} 100%{opacity:.95; transform:scale(1)}}
 .ripple{fill:none; stroke:var(--coral); stroke-width:1.6; opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center}
 .ripple.in{animation:rip 1.7s cubic-bezier(.2,.6,.35,1) var(--rd,0s) 1 forwards}
-@keyframes rip{0%{opacity:.55; transform:scale(1)} 100%{opacity:0; transform:scale(var(--sx,3.5))}}
+@keyframes rip{0%{opacity:var(--ro,.55); transform:scale(1)} 100%{opacity:0; transform:scale(var(--sx,3.5))}}
 .day-plate{position:absolute; left:24px; top:8px; max-width:230px; pointer-events:none; z-index:3}
 .day-plate .dp-day{font-family:"Newsreader",serif; font-size:clamp(46px,6vw,76px); line-height:.9; font-weight:500; color:var(--txt); letter-spacing:-.03em}
 .day-plate .dp-day b{font-weight:700; color:var(--coral); font-variant-numeric:tabular-nums}
@@ -147,12 +147,26 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 }
 
 /* ---------- day panel ---------- */
-.panel{max-width:1040px; margin:0 auto; padding:40px 24px 20px; transition:opacity .25s var(--ease-out), transform .25s var(--ease-out)}
-.panel.fade{opacity:0; transform:translateY(10px); transition-duration:.15s}
+.panel{max-width:1040px; margin:0 auto; padding:40px 24px 20px}
+/* the head lives in its own section (#pheadSec) and never re-renders; the swap
+   crossfade only touches #panel's content, entering a beat behind the head */
+.phead-sec{padding-bottom:0}
+#panel{padding-top:16px}
+.panel .faces, .panel .cards{transition:opacity .25s var(--ease-out) .08s, transform .25s var(--ease-out) .08s}
+.panel.fade .faces, .panel.fade .cards{opacity:0; transform:translateY(10px); transition-duration:.15s; transition-delay:0s}
 .p-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; border-top:1px solid var(--line); padding-top:28px}
 .p-over{font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--coral); font-weight:700}
 .p-head h2{font-family:"Newsreader",serif; font-size:clamp(30px,4.2vw,48px); font-weight:700; letter-spacing:-.02em; line-height:1.05}
 .p-sub{font-family:"Newsreader",serif; font-style:italic; font-size:clamp(16px,1.8vw,19px); line-height:1.55; color:var(--mut); max-width:52ch; margin:0 auto}
+/* head text recomposes letter-by-letter on day change. The block exit (.out)
+   is a fast uniform lift; the new text's characters develop in a top-down,
+   left-to-right cascade. The head is NEVER hidden at rest — a section peeking
+   at the fold always shows its text. */
+.p-head .p-over,.p-head h2,.p-head .p-sub{transition:opacity .15s var(--ease-out), transform .15s var(--ease-out), filter .15s var(--ease-out)}
+.p-head.out .p-over,.p-head.out h2,.p-head.out .p-sub{opacity:0; transform:translateY(-6px); filter:blur(3px)}
+.p-head .w{white-space:nowrap}
+.p-head .ch{display:inline-block; transition:opacity .22s ease var(--cd,0s)}
+.p-head.chload .ch{opacity:0; transition:none}
 
 /* faces strip */
 .faces{margin-top:28px}
@@ -225,6 +239,9 @@ footer.lit .fbg{opacity:1}
   .panel.fade{transform:none}
   #tip{transform:none}
   #tip.on{transform:none}
+  .p-head .p-over,.p-head h2,.p-head .p-sub{transition:opacity .2s ease}
+  .p-head.out .p-over,.p-head.out h2,.p-head.out .p-sub{transform:none; filter:none; transition:opacity .15s ease}
+  .p-head .ch{transition:none}
 }
 @media (prefers-reduced-transparency:reduce){
   header,.tl-sticky{backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(35,34,39,.97)}
@@ -309,12 +326,14 @@ footer.lit .fbg{opacity:1}
 
 <div id="tip"></div>
 
-<section class="panel" id="panel">
+<section class="panel phead-sec" id="pheadSec">
   <div class="p-head">
     <div class="p-over" id="pOver"></div>
     <h2 id="pTitle"></h2>
     <p class="p-sub" id="pSub"></p>
   </div>
+</section>
+<section class="panel" id="panel">
   <div class="faces" id="faces" hidden>
     <h3>Faces of this day</h3>
     <div class="face-row" id="faceRow"></div>
@@ -512,15 +531,31 @@ let curLocs=[];
 function renderDots(i){
   curLocs = D.days[i].locs;
   let html='';
-  const lite = matchMedia('(max-width:760px)').matches && curLocs.length > 30;
+  /* density-aware entrance: a lone martyr arrives as a deliberate beat;
+     a heavy day blooms outward from its epicenter as one event */
+  const N = curLocs.length;
+  const dense = Math.min(1, Math.max(0, (N - 8) / 40));   // 0 = sparse day, 1 = mass-casualty day
+  const dur = (0.5 - 0.1*dense).toFixed(2);               // 500ms → 400ms
+  const s0 = (0.55 + 0.35*dense).toFixed(2);              // dense days barely swell — they soak in
+  const win = N <= 8 ? 0.1*N : 0.55;                      // stagger window
+  const spread = (46 - 18*dense).toFixed(0);              // dense days: smaller, softer echoes
+  const ro = (0.55 - 0.15*dense).toFixed(2);
+  const pts = curLocs.map(L=>projection([L.ln, L.la]));
+  const cx = pts.reduce((a,p)=>a+p[0],0)/N, cy = pts.reduce((a,p)=>a+p[1],0)/N;
+  const dmax = Math.max(1, ...pts.map(p=>Math.hypot(p[0]-cx, p[1]-cy)));
+  // heavy days: echo only the hardest-hit sites (bounded), never every dot
+  const rippleSet = N > 30
+    ? new Set(curLocs.map((L,k)=>[L.n,k]).sort((a,b)=>b[0]-a[0]).slice(0,12).map(p=>p[1]))
+    : null;
   curLocs.forEach((L,k)=>{
-    const [x,y] = projection([L.ln, L.la]);
+    const [x,y] = pts[k];
     const r = rScale(L.n);
-    const delay = ((k%14)*0.05).toFixed(2);
-    const sx = ((r+46+r*2.2)/r).toFixed(2);
-    if(!lite || L.n > 1)
-      html += `<circle class="ripple in" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="--sx:${sx};--rd:${delay}s"></circle>`;
-    html += `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s"></circle>`
+    const delay = (N <= 8 ? k*0.1
+                 : Math.hypot(x-cx, y-cy)/dmax*win + (k%4)*0.02).toFixed(2);
+    const sx = ((r+ +spread+r*2.2)/r).toFixed(2);
+    if(!rippleSet || rippleSet.has(k))
+      html += `<circle class="ripple in" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="--sx:${sx};--rd:${delay}s;--ro:${ro}"></circle>`;
+    html += `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s;animation-duration:${dur}s;--d0:${s0}"></circle>`
           + `<circle class="loc-hit" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(r+9,15).toFixed(1)}"></circle>`;
   });
   gDots.node().innerHTML = html; // one DOM write instead of hundreds
@@ -660,7 +695,7 @@ $('#fbtn').addEventListener('click', ()=>{
   window.__fnT = setTimeout(()=>{ fw.classList.remove('dim'); ft.classList.remove('lit'); }, (names.length*step + 9.5)*1000);
 });
 $('#scrolldn').addEventListener('click', ()=>{
-  const p = $('#panel');
+  const p = $('#pheadSec');
   window.scrollTo({top: p.getBoundingClientRect().top + window.scrollY - (headerEl.offsetHeight + 13), behavior: MOTION_OK ? 'smooth' : 'auto'});
 });
 
@@ -687,12 +722,39 @@ const HEAD = {
  35:{h:"The Last Stand",s:"Non-cooperation begins — and the state answers with its bloodiest Sunday."},
  36:{h:"The Long March",s:"Millions walk to Dhaka. By afternoon, the calendar finally turns."}
 };
-function renderPanel(i){
+/* wrap text as per-word > per-character spans for the cascade; the element
+   keeps its plain text for assistive tech via aria-label */
+function setLetters(el, text, base){
+  const chars = Math.max(1, text.replace(/ /g,'').length);
+  const step = Math.min(0.024, 0.45/chars);
+  let ci = 0;
+  el.setAttribute('aria-label', text);
+  el.innerHTML = '<span aria-hidden="true">' + text.split(' ').map(w =>
+    '<span class="w">' + Array.from(w).map(c =>
+      '<span class="ch" style="--cd:' + (base + ci++*step).toFixed(3) + 's">' +
+      c.replace('&','&amp;').replace('<','&lt;') + '</span>'
+    ).join('') + '</span>'
+  ).join(' ') + '</span>';
+}
+function renderPanel(i, first){
   const d = D.days[i];
   const hd = HEAD[i] || {h:julyLabel(i), s:''};
-  $('#pOver').textContent = `${julyLabel(i)}${i>31?' · '+label(i)+' 2024':''} · Day ${i-15} · ${d.t} ${d.t===1?'martyr':'martyrs'}`;
-  $('#pTitle').textContent = hd.h;
-  $('#pSub').textContent = hd.s;
+  const over = `${julyLabel(i)}${i>31?' · '+label(i)+' 2024':''} · Day ${i-15} · ${d.t} ${d.t===1?'martyr':'martyrs'}`;
+  const head = document.querySelector('.p-head');
+  if(!first && MOTION_OK){
+    // letters develop top-down, left-to-right; text is never blanked at rest
+    setLetters($('#pOver'), over, 0);
+    setLetters($('#pTitle'), hd.h, 0.04);
+    setLetters($('#pSub'), hd.s, 0.08);
+    head.classList.add('chload');
+    void head.offsetWidth; // commit the hidden chars, then release the cascade
+    head.classList.remove('out'); head.classList.remove('chload');
+  } else {
+    $('#pOver').textContent = over;
+    $('#pTitle').textContent = hd.h;
+    $('#pSub').textContent = hd.s;
+    head.classList.remove('out');
+  }
   const fr = $('#faceRow'); fr.innerHTML='';
   const known = d.imgs.filter(f=>f!==UNK);
   if(known.length){
@@ -757,8 +819,13 @@ function selectDay(i, first=false){
   }
   const sd = $('#scrolldn');
   const panel = $('#panel');
-  if(first){ renderPanel(i); return; }
+  if(first){ renderPanel(i, true); return; }
   clearTimeout(selectDay._panelT);
+  const headEl = document.querySelector('.p-head');
+  const hb = headEl.getBoundingClientRect();
+  if(hb.bottom > 0 && hb.top < innerHeight){
+    headEl.classList.add('out'); // visible old text lifts away during the swap
+  }
   panel.classList.add('fade');
   selectDay._panelT = setTimeout(()=>{ renderPanel(i); panel.classList.remove('fade'); }, 160);
 }
