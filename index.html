@@ -5,21 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>July 36 — The 36 Days of July | The Daily Star</title>
 <script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/topojson-client@3.1.0/dist/topojson-client.min.js" integrity="sha384-Ukv1p/xTma6P4/2bY5KzWBw+ydSpXmhCMtyciIQVDJ1RmOxtCYNMF1uXT9T63H67" crossorigin="anonymous"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap" rel="stylesheet">
 <script src="assets/data/upazila.js" defer></script>
-<script src="assets/js/data.js"></script>
-<script src="assets/js/image-slot.js"></script>
+<script src="assets/js/data.js" defer></script>
+<script src="assets/js/image-slot.js" defer></script>
 <style>
 :root{
   --bg:#232227; --bg2:#2C2B30; --panel:#39383e; --deep:#4F4F51;
   --txt:#F7F5F2; --mut:#D4D1DB; --faint:#9b98a4;
   --coral:#FF8E76; --pink:#F2C4CE; --red:#E5484D; --line:rgba(224,222,230,.14);
+  --ease-out:cubic-bezier(.22,1,.36,1); --ease-in-out:cubic-bezier(.77,0,.175,1);
 }
 *{box-sizing:border-box; margin:0; padding:0}
-html{scroll-behavior:smooth}
 body{background:var(--bg); color:var(--txt); font-family:"Archivo",sans-serif; -webkit-font-smoothing:antialiased;
   background-image:radial-gradient(1100px 500px at 75% -10%, rgba(245,143,124,.07), transparent 60%),
                    radial-gradient(800px 600px at -10% 30%, rgba(79,79,81,.35), transparent 60%)}
@@ -83,14 +82,17 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 }
 
 /* ---------- timeline ---------- */
-.tl-sticky{position:sticky; top:57px; z-index:40; background:rgba(35,34,39,.88); backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
+.tl-sticky{position:sticky; top:var(--hh,57px); z-index:40; background:rgba(35,34,39,.88); backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
 .tl{max-width:980px; margin:0 auto; padding:8px 24px}
 .tl-row{display:flex; gap:3px; align-items:center}
 .tl-cap{font-size:9px; letter-spacing:.22em; text-transform:uppercase; color:var(--faint); font-weight:700; line-height:1; align-self:center; margin-right:8px; white-space:nowrap}
-.day-btn{flex:1; border:0; background:transparent; cursor:pointer; padding:6px 0 7px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:3px; transition:background .25s, box-shadow .25s; font-family:"Archivo",sans-serif; position:relative}
-.day-btn:hover{background:rgba(245,143,124,.1)}
-.day-btn .num{font-family:"Space Grotesk",sans-serif; font-size:14.5px; font-weight:500; color:var(--mut); line-height:1; transition:color .25s; font-variant-numeric:tabular-nums}
-.day-btn .dot{width:5px; height:5px; border-radius:50%; background:var(--deep); transition:background .3s, transform .3s}
+.day-btn{flex:1; border:0; background:transparent; cursor:pointer; padding:6px 0 7px; border-radius:20px; display:flex; flex-direction:column; align-items:center; gap:3px; transition:background-color .15s ease, box-shadow .15s ease, transform .16s var(--ease-out); font-family:"Archivo",sans-serif; position:relative}
+.day-btn,.scrolldn,.fbtn{-webkit-tap-highlight-color:transparent; touch-action:manipulation}
+.day-btn:active{transform:scale(.96)}
+.scrolldn:active{transform:scale(.94)}
+.fbtn:active{transform:scale(.97)}
+.day-btn .num{font-family:"Space Grotesk",sans-serif; font-size:14.5px; font-weight:500; color:var(--mut); line-height:1; transition:color .15s; font-variant-numeric:tabular-nums}
+.day-btn .dot{width:5px; height:5px; border-radius:50%; background:var(--deep); transition:background-color .2s, transform .2s}
 .day-btn.active{background:var(--coral); box-shadow:0 4px 16px rgba(245,143,124,.35)}
 .day-btn.active .num{color:var(--bg); font-weight:700}
 .day-btn.active .dot{background:var(--bg); transform:scale(1.2)}
@@ -107,8 +109,8 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .loc-core{fill:var(--coral); stroke:var(--bg); stroke-width:1; opacity:0; cursor:pointer; transition:fill .25s; transform-box:fill-box; transform-origin:center}
 .loc-core:hover, .loc-core.hov{fill:var(--pink)}
 .loc-hit{fill:none; pointer-events:all; cursor:pointer}
-.loc-core.in{animation:pop .8s cubic-bezier(.2,1.3,.4,1) forwards}
-@keyframes pop{0%{opacity:0; transform:scale(0)} 60%{opacity:1; transform:scale(1.32)} 100%{opacity:.95; transform:scale(1)}}
+.loc-core.in{animation:pop .45s var(--ease-out) forwards}
+@keyframes pop{0%{opacity:0; transform:scale(.5)} 100%{opacity:.95; transform:scale(1)}}
 .ripple{fill:none; stroke:var(--coral); stroke-width:1.6; opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center}
 .ripple.in{animation:rip 1.7s cubic-bezier(.2,.6,.35,1) var(--rd,0s) 1 forwards}
 @keyframes rip{0%{opacity:.55; transform:scale(1)} 100%{opacity:0; transform:scale(var(--sx,3.5))}}
@@ -130,12 +132,11 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .bd-pulse.go{animation:bdpulse 1.25s ease-in-out 2}
 @keyframes bdpulse{0%,100%{opacity:0} 50%{opacity:1}}
 .names-layer{position:absolute; inset:0; pointer-events:none; z-index:3; overflow:hidden}
-.nm{position:absolute; font-family:"Newsreader",serif; font-style:italic; color:var(--pink); opacity:0; white-space:nowrap; animation:nmfloat var(--nd,6s) ease-in-out var(--ndel,0s) forwards; letter-spacing:.02em; will-change:opacity,transform; max-width:100%; overflow:hidden; text-overflow:ellipsis}
+.nm{position:absolute; font-family:"Newsreader",serif; font-style:italic; color:var(--pink); opacity:0; white-space:nowrap; animation:nmfloat var(--nd,6s) ease-in-out var(--ndel,0s) forwards; letter-spacing:.02em; max-width:100%; overflow:hidden; text-overflow:ellipsis}
 .nm.r{right:var(--nx); left:auto; text-align:right}
 .nm.l{left:var(--nx)}
 @keyframes nmfloat{0%{opacity:0; transform:translateY(16px)} 32%{opacity:.6} 68%{opacity:.6} 100%{opacity:0; transform:translateY(-20px)}}
-.scrolldn{position:absolute; left:24px; bottom:14px; z-index:3; width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,142,118,.5); background:rgba(35,34,39,.65); color:var(--coral); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .3s, transform .3s}
-.scrolldn:hover{background:rgba(255,142,118,.16); transform:translateY(2px)}
+.scrolldn{position:absolute; left:24px; bottom:14px; z-index:3; width:44px; height:44px; border-radius:50%; border:1px solid rgba(255,142,118,.5); background:rgba(35,34,39,.65); color:var(--coral); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .3s, transform .16s var(--ease-out)}
 .scrolldn svg{width:16px; height:16px}
 #tip{position:fixed; z-index:90; pointer-events:none; background:#1a191d; border:1px solid rgba(245,143,124,.35); color:var(--txt); border-radius:8px; padding:9px 13px; font-size:12.5px; line-height:1.45; box-shadow:0 10px 30px rgba(0,0,0,.5); opacity:0; transform:translateY(4px); transition:opacity .18s, transform .18s; max-width:230px}
 #tip.on{opacity:1; transform:translateY(0)}
@@ -146,8 +147,8 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 }
 
 /* ---------- day panel ---------- */
-.panel{max-width:1040px; margin:0 auto; padding:40px 24px 20px; transition:opacity .3s, transform .3s}
-.panel.fade{opacity:0; transform:translateY(10px)}
+.panel{max-width:1040px; margin:0 auto; padding:40px 24px 20px; transition:opacity .25s var(--ease-out), transform .25s var(--ease-out)}
+.panel.fade{opacity:0; transform:translateY(10px); transition-duration:.15s}
 .p-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; border-top:1px solid var(--line); padding-top:28px}
 .p-over{font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--coral); font-weight:700}
 .p-head h2{font-family:"Newsreader",serif; font-size:clamp(30px,4.2vw,48px); font-weight:700; letter-spacing:-.02em; line-height:1.05}
@@ -157,9 +158,8 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .faces{margin-top:28px}
 .faces h3{font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--mut); font-weight:700; display:flex; align-items:center; gap:12px}
 .faces h3::after{content:""; flex:1; height:1px; background:var(--line)}
-.face-row{display:flex; gap:10px; margin-top:14px; overflow-x:auto; padding-bottom:8px; scrollbar-width:thin; scrollbar-color:var(--deep) transparent; align-items:center}
+.face-row{display:flex; gap:10px; margin-top:14px; overflow-x:auto; overscroll-behavior-x:contain; padding-bottom:8px; scrollbar-width:thin; scrollbar-color:var(--deep) transparent; align-items:center}
 .face-row img{width:84px; height:84px; object-fit:cover; border-radius:6px; flex:0 0 auto; filter:grayscale(1) brightness(.92); border:1px solid var(--line); transition:filter .4s, transform .4s, border-color .4s; opacity:0; animation:facein .6s forwards}
-.face-row img:hover{filter:none; transform:translateY(-3px); border-color:var(--coral)}
 @keyframes facein{to{opacity:1}}
 .face-more{flex:0 0 auto; width:84px; height:84px; border-radius:6px; border:1px dashed rgba(245,143,124,.4); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; color:var(--coral)}
 .face-more b{font-family:"Space Grotesk",sans-serif; font-size:20px; font-weight:600}
@@ -181,7 +181,7 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 
 /* footer */
 footer{margin-top:72px; background:#1c1b1f; border-top:1px solid var(--line); position:relative; overflow:hidden}
-.fbg{position:absolute; left:0; right:0; top:0; bottom:0; background:url('assets/img/footer-bg.png') center/cover no-repeat; opacity:.30; transition:opacity 2.2s cubic-bezier(.4,0,.2,1); will-change:opacity; pointer-events:none}
+.fbg{position:absolute; left:0; right:0; top:0; bottom:0; background:url('assets/img/footer-bg.jpg') center/cover no-repeat; opacity:.30; transition:opacity 2.2s cubic-bezier(.4,0,.2,1); will-change:opacity; pointer-events:none}
 .fbg::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(22,20,23,.5), rgba(22,20,23,.2) 45%, rgba(22,20,23,.55))}
 footer.lit .fbg{opacity:1}
 .fnames .nm{color:#ffd9a3; animation-name:nmfloatf; letter-spacing:.02em}
@@ -191,8 +191,14 @@ footer.lit .fbg{opacity:1}
 .fwrap .big,.fwrap .fbtn,.fwrap .fnote{transition:opacity 2.2s cubic-bezier(.4,0,.2,1); will-change:opacity}
 .fwrap.dim .big,.fwrap.dim .fnote{opacity:.08}
 .fwrap.dim .fbtn{opacity:.3}
-.fbtn{margin-top:26px; font-family:"Archivo",sans-serif; font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--coral); background:transparent; border:1px solid rgba(255,142,118,.5); border-radius:30px; padding:13px 26px; cursor:pointer; transition:background .3s, color .3s, border-color .3s; position:relative; z-index:1}
-.fbtn:hover{background:var(--coral); color:var(--bg); border-color:var(--coral)}
+.fbtn{margin-top:26px; font-family:"Archivo",sans-serif; font-size:12px; font-weight:700; letter-spacing:.18em; text-transform:uppercase; color:var(--coral); background:transparent; border:1px solid rgba(255,142,118,.5); border-radius:30px; padding:13px 26px; cursor:pointer; transition:background .3s, color .3s, border-color .3s, transform .16s var(--ease-out); position:relative; z-index:1}
+/* hover effects only where hover exists — touch devices get press feedback instead */
+@media (hover:hover) and (pointer:fine){
+  .day-btn:hover{background:rgba(245,143,124,.1)}
+  .face-row img:hover{filter:none; transform:translateY(-3px); border-color:var(--coral)}
+  .scrolldn:hover{background:rgba(255,142,118,.16); transform:translateY(2px)}
+  .fbtn:hover{background:var(--coral); color:var(--bg); border-color:var(--coral)}
+}
 .fwrap .big{font-family:"Newsreader",serif; font-size:clamp(22px,3vw,32px); font-weight:400; line-height:1.45; max-width:30ch; color:var(--txt); text-wrap:pretty}
 .fwrap .big b{color:var(--coral); font-weight:700}
 .fnote{margin:26px auto 0; font-size:12px; line-height:1.7; color:var(--faint); max-width:62ch}
@@ -206,9 +212,26 @@ footer.lit .fbg{opacity:1}
 .fbar-soc a:hover{color:var(--coral); background:#2C2B30}
 .fbar-soc svg{width:15px; height:15px; fill:currentColor}
 
+/* reduced motion: keep comprehension fades, drop movement */
+@keyframes nmfade{0%{opacity:0} 32%{opacity:.6} 68%{opacity:.6} 100%{opacity:0}}
+@keyframes cardfade{to{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .nm{animation-name:nmfade}
+  .fnames .nm{animation-name:nmfade}
+  .loc-core.in{animation:none; opacity:.95}
+  .ripple.in{animation:none}
+  .bd-pulse.go{animation:none}
+  .card{animation:cardfade .3s ease forwards; transform:none}
+  .panel.fade{transform:none}
+  #tip{transform:none}
+  #tip.on{transform:none}
+}
+@media (prefers-reduced-transparency:reduce){
+  header,.tl-sticky{backdrop-filter:none; -webkit-backdrop-filter:none; background:rgba(35,34,39,.97)}
+}
+
 @media (max-width:900px){
-  .hero{grid-template-columns:1fr; gap:32px; padding-top:40px}
-  .mosaic{grid-template-columns:repeat(7,1fr)}
+  .hero{gap:32px; padding-top:40px}
   .day-plate{position:static; max-width:none; display:flex; align-items:baseline; gap:18px; flex-wrap:wrap; padding-bottom:10px}
   .day-plate .dp-stats{flex-direction:row; gap:22px; margin-top:0}
   .counter .cnum{font-size:38px}
@@ -221,7 +244,6 @@ footer.lit .fbg{opacity:1}
   .day-btn .num{font-size:13.5px}
   .day-btn .dot{width:4px; height:4px}
   .scrolldn{left:16px; bottom:8px; width:38px; height:38px}
-  .mfilter{display:block}
   .hwrap{padding:12px 16px} .hwrap img.logo{height:22px}
   .htag{display:none}
   .stage{padding:4px 16px 0}
@@ -325,9 +347,10 @@ footer.lit .fbg{opacity:1}
   </div>
 </footer>
 </div>
-<script>
+<script type="module">
 const D = window.MARTYR_DATA;
 const $ = s => document.querySelector(s);
+const MOTION_OK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const label = i => i<=31 ? `${i} July` : `${i-31} August`;
 const julyLabel = i => `${i} July`;
@@ -375,6 +398,13 @@ for(let i=16;i<=36;i++){
   tlrow.appendChild(b);
 }
 
+/* sticky offsets derive from the real header height (differs on mobile);
+   re-measure after logo/fonts land — they change the header's box */
+const headerEl = document.querySelector('header');
+function setHH(){ document.documentElement.style.setProperty('--hh', headerEl.offsetHeight+'px'); }
+setHH(); addEventListener('resize', setHH); addEventListener('load', setHH);
+if(document.fonts) document.fonts.ready.then(setHH);
+
 
 
 /* ---------- hero background wall ---------- */
@@ -407,7 +437,12 @@ const THUMB = f => 'assets/img/martyrs/thumb/' + f.replace(/\.png$/,'.jpg');
     bg.appendChild(frag);
   }
   build();
-  let rt; addEventListener('resize', ()=>{ clearTimeout(rt); rt=setTimeout(build, 200); });
+  let rt, lastW = innerWidth;
+  addEventListener('resize', ()=>{
+    if(innerWidth === lastW) return;               // URL-bar show/hide fires height-only resizes
+    clearTimeout(rt);
+    rt = setTimeout(()=>{ lastW = innerWidth; build(); }, 200);
+  });
 })();
 
 /* ---------- map ---------- */
@@ -477,13 +512,15 @@ let curLocs=[];
 function renderDots(i){
   curLocs = D.days[i].locs;
   let html='';
+  const lite = matchMedia('(max-width:760px)').matches && curLocs.length > 30;
   curLocs.forEach((L,k)=>{
     const [x,y] = projection([L.ln, L.la]);
     const r = rScale(L.n);
     const delay = ((k%14)*0.05).toFixed(2);
     const sx = ((r+46+r*2.2)/r).toFixed(2);
-    html += `<circle class="ripple in" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="--sx:${sx};--rd:${delay}s"></circle>`
-          + `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s"></circle>`
+    if(!lite || L.n > 1)
+      html += `<circle class="ripple in" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="--sx:${sx};--rd:${delay}s"></circle>`;
+    html += `<circle class="loc-core in" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${r.toFixed(1)}" style="animation-delay:${delay}s"></circle>`
           + `<circle class="loc-hit" data-k="${k}" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${Math.max(r+9,15).toFixed(1)}"></circle>`;
   });
   gDots.node().innerHTML = html; // one DOM write instead of hundreds
@@ -525,6 +562,7 @@ function runCounter(i){
   if(countRaf) cancelAnimationFrame(countRaf);
   const target = D.days[i].t;
   $('#clabel').textContent = `lives lost · ${julyLabel(i)}`;
+  if(!MOTION_OK){ cnum.textContent = target; return; }
   const dur = 1400, t0 = performance.now();
   const ease = t => 1-Math.pow(1-t,3);
   (function tick(now){
@@ -535,29 +573,41 @@ function runCounter(i){
 }
 
 /* ---------- day panel ---------- */
-/* ---------- floating names ---------- */
-function renderNames(i){
-  const layer = $('#names'); layer.innerHTML='';
-  const names = D.days[i].names || [];
-  if(!names.length) return;
+/* ---------- floating names (wave-spawned so heavy days stay light) ---------- */
+function floatNames(layer, names, opts){
+  clearTimeout(layer.__waveT);
+  layer.innerHTML = '';
+  if(!names.length) return 0;
   const picks = names.slice();
   for(let k=picks.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [picks[k],picks[j]]=[picks[j],picks[k]]; }
   const isMobile = matchMedia('(max-width:760px)').matches;
-  const show = picks;
-  const step = Math.min(0.55, Math.max(0.09, 16/show.length));
-  show.forEach((nm,k)=>{
-    const el = document.createElement('span');
-    el.textContent=nm;
-    const left = k%2===0;
-    el.className='nm '+(left?'l':'r');
-    el.style.setProperty('--nx', (2+Math.random()*(isMobile?24:34))+'%');
-    el.style.top = (5+Math.random()*86)+'%';
-    el.style.fontSize = isMobile ? (11+Math.random()*3)+'px' : (12.5+Math.random()*6.5)+'px';
-    el.style.textShadow = '0 1px 10px rgba(0,0,0,.85)';
-    el.style.setProperty('--ndel', (k*step)+'s');
-    el.style.setProperty('--nd', (5.5+Math.random()*3)+'s');
-    layer.appendChild(el);
-  });
+  const step = Math.min(0.55, Math.max(0.09, 16/picks.length));
+  const BATCH = 24;
+  let next = 0;
+  (function spawn(){
+    const frag = document.createDocumentFragment();
+    const end = Math.min(picks.length, next + BATCH);
+    for(; next < end; next++){
+      const el = document.createElement('span');
+      el.textContent = picks[next];
+      el.className = 'nm ' + (next%2===0 ? 'l' : 'r');
+      el.style.setProperty('--nx', (2+Math.random()*(isMobile?opts.xm:opts.xd))+'%');
+      el.style.top = (opts.top0+Math.random()*opts.topR)+'%';
+      el.style.fontSize = isMobile ? (11+Math.random()*3)+'px' : (12.5+Math.random()*opts.fsR)+'px';
+      el.style.textShadow = opts.shadow;
+      el.style.setProperty('--ndel', ((next % BATCH)*step)+'s');
+      el.style.setProperty('--nd', (5.5+Math.random()*3)+'s');
+      el.addEventListener('animationend', ()=>el.remove());
+      frag.appendChild(el);
+    }
+    layer.appendChild(frag);
+    if(next < picks.length) layer.__waveT = setTimeout(spawn, BATCH*step*1000);
+  })();
+  return step;
+}
+function renderNames(i){
+  floatNames($('#names'), D.days[i].names || [],
+    {xm:24, xd:34, top0:5, topR:86, fsR:6.5, shadow:'0 1px 10px rgba(0,0,0,.85)'});
 }
 
 /* ---------- day 36 finale ---------- */
@@ -600,23 +650,10 @@ function runFinale(){
   finaleTimers.push(setTimeout(()=>{ gFin.style('will-change',null); },12000));
 }
 $('#fbtn').addEventListener('click', ()=>{
-  const layer = $('#fnames'); layer.innerHTML='';
+  const layer = $('#fnames');
   const names = (D.afterNames||[]).slice();
-  for(let k=names.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [names[k],names[j]]=[names[j],names[k]]; }
-  const isMobile = matchMedia('(max-width:760px)').matches;
-  const step = Math.min(0.5, Math.max(0.1, 16/Math.max(names.length,1)));
-  names.forEach((nm,k)=>{
-    const el = document.createElement('span');
-    el.textContent = nm;
-    el.className = 'nm '+(k%2===0?'l':'r');
-    el.style.setProperty('--nx', (2+Math.random()*(isMobile?20:30))+'%');
-    el.style.top = (4+Math.random()*88)+'%';
-    el.style.fontSize = isMobile ? (11+Math.random()*3)+'px' : (12.5+Math.random()*5.5)+'px';
-    el.style.textShadow = '0 1px 3px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.85)';
-    el.style.setProperty('--ndel', (k*step)+'s');
-    el.style.setProperty('--nd', (5.5+Math.random()*3)+'s');
-    layer.appendChild(el);
-  });
+  const step = floatNames(layer, names,
+    {xm:20, xd:30, top0:4, topR:88, fsR:5.5, shadow:'0 1px 3px rgba(0,0,0,.95), 0 0 16px rgba(0,0,0,.85)'}) || 0.1;
   const fw = document.querySelector('.fwrap'), ft = $('#foot');
   fw.classList.add('dim'); ft.classList.add('lit');
   clearTimeout(window.__fnT);
@@ -624,7 +661,7 @@ $('#fbtn').addEventListener('click', ()=>{
 });
 $('#scrolldn').addEventListener('click', ()=>{
   const p = $('#panel');
-  window.scrollTo({top: p.getBoundingClientRect().top + window.scrollY - 70, behavior:'smooth'});
+  window.scrollTo({top: p.getBoundingClientRect().top + window.scrollY - (headerEl.offsetHeight + 13), behavior: MOTION_OK ? 'smooth' : 'auto'});
 });
 
 const HEAD = {
@@ -679,7 +716,7 @@ function renderPanel(i){
     const c = document.createElement('article');
     c.className='card'+(k%2?' rev':''); c.style.animationDelay=(k*0.12)+'s';
     c.innerHTML = `
-      <div class="imgbox"><image-slot id="card-${i}-${k+1}" shape="rect" placeholder="Drop photo — ${label(i)}"></image-slot></div>
+      <div class="imgbox"><image-slot id="card-${i}-${k+1}" shape="rect" placeholder="${label(i)} 2024"></image-slot></div>
       <div class="body">
         <div class="cnumb">Story ${String(k+1).padStart(2,'0')}</div>
         <h4>${s.t}</h4>
@@ -695,7 +732,11 @@ function selectDay(i, first=false){
   if(i===current) return;
   current = i;
   history.replaceState(null,'','#day-'+i);
-  document.querySelectorAll('.day-btn').forEach(b=>b.classList.toggle('active', +b.dataset.day===i));
+  document.querySelectorAll('.day-btn').forEach(b=>{
+    const on = +b.dataset.day===i;
+    b.classList.toggle('active', on);
+    if(on) b.setAttribute('aria-current','date'); else b.removeAttribute('aria-current');
+  });
   $('#dpDay').innerHTML = `<b>${i}</b><span style="font-size:.42em"> July</span>`;
   $('#dpDate').textContent = i>31 ? label(i)+' 2024' : 'Day '+(i-15)+' of the uprising';
   const nDist = new Set(D.days[i].locs.map(l=>l.dt)).size;
@@ -709,16 +750,17 @@ function selectDay(i, first=false){
   if(i===36) runFinale();
   if(!first){
     const tlEl = document.querySelector('.tl-sticky');
-    if(tlEl && tlEl.getBoundingClientRect().top > 58){
+    if(tlEl && tlEl.getBoundingClientRect().top > headerEl.offsetHeight + 1){
       const r = document.querySelector('.map-wrap').getBoundingClientRect();
-      window.scrollTo({top: r.top + window.scrollY - Math.max(70, (innerHeight - r.height)/2), behavior:'smooth'});
+      window.scrollTo({top: r.top + window.scrollY - Math.max(headerEl.offsetHeight + 13, (innerHeight - r.height)/2), behavior: MOTION_OK ? 'smooth' : 'auto'});
     }
   }
   const sd = $('#scrolldn');
   const panel = $('#panel');
   if(first){ renderPanel(i); return; }
+  clearTimeout(selectDay._panelT);
   panel.classList.add('fade');
-  setTimeout(()=>{ renderPanel(i); panel.classList.remove('fade'); }, 280);
+  selectDay._panelT = setTimeout(()=>{ renderPanel(i); panel.classList.remove('fade'); }, 160);
 }
 $('#hc').textContent = D.total;
 </script>
