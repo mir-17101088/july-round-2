@@ -4,7 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>July 36 — The 36 Days of July | The Daily Star</title>
-<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous"></script>
+<meta name="description" content="An interactive memorial mapping the 36 days of Bangladesh's July 2024 uprising — 835 martyrs remembered, day by day, place by place. By The Daily Star.">
+<meta name="theme-color" content="#232227">
+<link rel="icon" href="assets/img/logo.svg" type="image/svg+xml">
+<!-- defer: d3 is only used by the deferred module below; render-blocking CDN
+     fetch here cost the whole first paint on slow networks -->
+<script src="https://unpkg.com/d3@7.9.0/dist/d3.min.js" integrity="sha384-CjloA8y00+1SDAUkjs099PVfnY2KmDC2BZnws9kh8D/lX1s46w6EPhpXdqMfjK6i" crossorigin="anonymous" defer></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=Archivo:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap" rel="stylesheet">
@@ -40,7 +45,9 @@ a{color:var(--coral); text-decoration:none} a:hover{color:var(--pink)}
 
 /* ---------- header ---------- */
 header{position:sticky; top:0; z-index:50; background:rgba(35,34,39,.82); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-bottom:1px solid var(--line)}
-@media (max-width:760px){
+/* touch devices of any width (old tablets included) get an opaque header —
+   two stacked backdrop blurs repaint on every scroll frame */
+@media (max-width:760px), (hover:none) and (pointer:coarse){
   header, .tl-sticky{backdrop-filter:none !important; -webkit-backdrop-filter:none !important; background:rgba(35,34,39,.97) !important}
 }
 .hwrap{max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center; gap:16px}
@@ -67,6 +74,8 @@ h1 .bn::after{content:attr(data-text); position:absolute; left:0; right:0; top:0
   filter:blur(14px) saturate(1.5); transform-origin:50% 0; will-change:transform,opacity; pointer-events:none;
   animation:bleed 5.5s cubic-bezier(.45,0,.55,1) infinite}
 @keyframes bleed{0%,100%{opacity:.35; transform:translateY(3px) scaleY(1.02)}50%{opacity:.75; transform:translateY(11px) scaleY(1.09)}}
+/* the bleed is infinite — don't let it composite forever while scrolled away */
+.hero.offstage h1 .bn::after{animation-play-state:paused}
 @media (prefers-reduced-motion:reduce){h1 .bn::after{animation:none; opacity:.4}}
 h1 em{font-family:"Newsreader",serif; font-style:italic; font-weight:400; color:var(--pink)}
 .lede{margin-top:22px; max-width:58ch; font-size:16px; line-height:1.65; color:#DCD9E2; text-shadow:0 1px 14px rgba(0,0,0,.55)}
@@ -77,7 +86,7 @@ body.revealed .hero-inner h1{animation:heroin 1.15s cubic-bezier(.22,1,.36,1) .1
 body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1) .32s forwards}
 @keyframes heroin{to{opacity:1; transform:translateY(0)}}
 @media (prefers-reduced-motion:reduce){
-  .hero-inner h1, .hero-inner .lede{opacity:1; transform:none; animation:none !important}
+  .hero-inner h1, .hero-inner .lede{opacity:1; transform:none; animation:none !important; will-change:auto}
   .hero-bg .tile{animation-play-state:running}
 }
 
@@ -124,14 +133,14 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .dp-stat span{font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)}
 
 /* counter */
-.counter{position:absolute; right:24px; bottom:14px; text-align:right; pointer-events:none; z-index:3}
+.counter{position:absolute; right:24px; bottom:14px; text-align:right; pointer-events:none; z-index:3; contain:layout paint style}
 .counter .cnum{font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:clamp(44px,5.6vw,72px); line-height:.95; letter-spacing:-.03em; color:var(--coral); font-variant-numeric:tabular-nums}
 .counter .clabel{font-size:10.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--mut); font-weight:600; margin-top:6px; white-space:nowrap}
 .bd-outline{fill:none; stroke:var(--red); stroke-width:2.6; stroke-opacity:.9; vector-effect:non-scaling-stroke}
 .bd-pulse{fill:none; stroke:var(--red); stroke-width:6; vector-effect:non-scaling-stroke; opacity:0; pointer-events:none; will-change:opacity}
 .bd-pulse.go{animation:bdpulse 1.25s ease-in-out 2}
 @keyframes bdpulse{0%,100%{opacity:0} 50%{opacity:1}}
-.names-layer{position:absolute; inset:0; pointer-events:none; z-index:3; overflow:hidden}
+.names-layer{position:absolute; inset:0; pointer-events:none; z-index:3; overflow:hidden; contain:strict}
 .nm{position:absolute; font-family:"Newsreader",serif; font-style:italic; color:var(--pink); opacity:0; white-space:nowrap; animation:nmfloat var(--nd,6s) ease-in-out var(--ndel,0s) forwards; letter-spacing:.02em; max-width:100%; overflow:hidden; text-overflow:ellipsis}
 .nm.r{right:var(--nx); left:auto; text-align:right}
 .nm.l{left:var(--nx)}
@@ -154,7 +163,9 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 #panel{padding-top:16px}
 .panel .faces, .panel .cards{transition:opacity .25s var(--ease-out) .08s, transform .25s var(--ease-out) .08s}
 .panel.fade .faces, .panel.fade .cards{opacity:0; transform:translateY(10px); transition-duration:.15s; transition-delay:0s}
-.p-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; border-top:1px solid var(--line); padding-top:28px}
+/* contain: the cascade's ~130 span swap + forced reflow stay scoped to the
+   head's subtree instead of dirtying the whole document */
+.p-head{display:flex; flex-direction:column; align-items:center; text-align:center; gap:12px; border-top:1px solid var(--line); padding-top:28px; contain:layout style}
 .p-over{font-size:10.5px; letter-spacing:.28em; text-transform:uppercase; color:var(--coral); font-weight:700}
 .p-head h2{font-family:"Newsreader",serif; font-size:clamp(30px,4.2vw,48px); font-weight:700; letter-spacing:-.02em; line-height:1.05}
 .p-sub{font-family:"Newsreader",serif; font-style:italic; font-size:clamp(16px,1.8vw,19px); line-height:1.55; color:var(--mut); max-width:52ch; margin:0 auto}
@@ -168,8 +179,9 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .p-head .ch{display:inline-block; transition:opacity .22s ease var(--cd,0s)}
 .p-head.chload .ch{opacity:0; transition:none}
 
-/* faces strip */
-.faces{margin-top:28px}
+/* faces strip — offscreen it costs nothing (content-visibility), so phase-2
+   rebuilds while the user is up at the map are near-free on old phones */
+.faces{margin-top:28px; content-visibility:auto; contain-intrinsic-size:auto 132px}
 .faces h3{font-size:10.5px; letter-spacing:.24em; text-transform:uppercase; color:var(--mut); font-weight:700; display:flex; align-items:center; gap:12px}
 .faces h3::after{content:""; flex:1; height:1px; background:var(--line)}
 .face-row{display:flex; gap:10px; margin-top:14px; overflow-x:auto; overscroll-behavior-x:contain; padding-bottom:8px; scrollbar-width:thin; scrollbar-color:var(--deep) transparent; align-items:center}
@@ -181,7 +193,7 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 
 /* cards */
 .cards{display:flex; flex-direction:column; gap:16px; margin-top:32px}
-.card{display:grid; grid-template-columns:240px 1fr; background:var(--bg2); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:0 6px 28px rgba(0,0,0,.28); opacity:0; transform:translateY(14px); animation:cardin .6s cubic-bezier(.2,.7,.3,1) forwards}
+.card{display:grid; grid-template-columns:240px 1fr; background:var(--bg2); border:1px solid var(--line); border-radius:12px; overflow:hidden; box-shadow:0 6px 28px rgba(0,0,0,.28); opacity:0; transform:translateY(14px); animation:cardin .6s cubic-bezier(.2,.7,.3,1) forwards; content-visibility:auto; contain-intrinsic-size:auto 320px}
 @keyframes cardin{to{opacity:1; transform:none}}
 .card .imgbox{position:relative; min-height:180px; background:#1d1c20}
 .card.rev{grid-template-columns:1fr 240px}
@@ -193,15 +205,15 @@ body.revealed .hero-inner .lede{animation:heroin 1.15s cubic-bezier(.22,1,.36,1)
 .card .tag{font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; font-weight:700; color:var(--coral); background:rgba(245,143,124,.1); border:1px solid rgba(245,143,124,.25); border-radius:20px; padding:4px 10px}
 .card p{margin-top:12px; font-family:"Archivo",sans-serif; font-size:15px; line-height:1.65; color:var(--mut); text-wrap:pretty}
 
-/* footer */
-footer{margin-top:72px; background:#1c1b1f; border-top:1px solid var(--line); position:relative; overflow:hidden}
+/* footer — skipped entirely while offscreen (big bg image + held layers) */
+footer{margin-top:72px; background:#1c1b1f; border-top:1px solid var(--line); position:relative; overflow:hidden; content-visibility:auto; contain-intrinsic-size:auto 760px}
 .fbg{position:absolute; left:0; right:0; top:0; bottom:0; background:url('assets/img/footer-bg.jpg') center/cover no-repeat; opacity:.30; transition:opacity 2.2s cubic-bezier(.4,0,.2,1); will-change:opacity; pointer-events:none}
 .fbg::after{content:""; position:absolute; inset:0; background:linear-gradient(180deg, rgba(22,20,23,.5), rgba(22,20,23,.2) 45%, rgba(22,20,23,.55))}
 footer.lit .fbg{opacity:1}
 .fnames .nm{color:#ffd9a3; animation-name:nmfloatf; letter-spacing:.02em}
 @keyframes nmfloatf{0%{opacity:0; transform:translateY(16px)} 32%{opacity:1} 68%{opacity:1} 100%{opacity:0; transform:translateY(-20px)}}
 .fwrap{max-width:860px; margin:0 auto; padding:64px 24px 60px; text-align:center; display:flex; flex-direction:column; align-items:center; position:relative}
-.fnames{position:absolute; inset:0; pointer-events:none; overflow:hidden}
+.fnames{position:absolute; inset:0; pointer-events:none; overflow:hidden; contain:strict}
 .fwrap .big,.fwrap .fbtn,.fwrap .fnote{transition:opacity 2.2s cubic-bezier(.4,0,.2,1); will-change:opacity}
 .fwrap.dim .big,.fwrap.dim .fnote{opacity:.08}
 .fwrap.dim .fbtn{opacity:.3}
@@ -424,6 +436,19 @@ function setHH(){ document.documentElement.style.setProperty('--hh', headerEl.of
 setHH(); addEventListener('resize', setHH); addEventListener('load', setHH);
 if(document.fonts) document.fonts.ready.then(setHH);
 
+/* hero: release the entrance layers once they've landed (will-change held
+   forever = two big text layers resident on old phones), and pause the
+   infinite title-bleed animation whenever the hero is scrolled away */
+document.querySelectorAll('.hero-inner h1, .hero-inner .lede').forEach(el=>{
+  el.addEventListener('animationend', ()=>{ el.style.willChange='auto'; }, {once:true});
+});
+if('IntersectionObserver' in window){
+  const heroEl = document.querySelector('.hero');
+  new IntersectionObserver(es=>{
+    heroEl.classList.toggle('offstage', !es[0].isIntersecting);
+  }).observe(heroEl);
+}
+
 
 
 /* ---------- hero background wall ---------- */
@@ -611,18 +636,26 @@ function runCounter(i){
 /* ---------- floating names (wave-spawned so heavy days stay light) ---------- */
 function floatNames(layer, names, opts){
   clearTimeout(layer.__waveT);
-  layer.innerHTML = '';
-  if(!names.length) return 0;
+  cancelAnimationFrame(layer.__waveR);
+  cancelAnimationFrame(layer.__clearR);
+  /* teardown is chunked like the spawn: dropping ~90 animating spans (and
+     their compositor layers) in one innerHTML='' was the last long task left */
+  const olds = Array.from(layer.children);
   const picks = names.slice();
   for(let k=picks.length-1;k>0;k--){ const j=Math.floor(Math.random()*(k+1)); [picks[k],picks[j]]=[picks[j],picks[k]]; }
   const isMobile = matchMedia('(max-width:760px)').matches;
-  const step = Math.min(0.55, Math.max(0.09, 16/picks.length));
-  const BATCH = 24;
+  const step = Math.min(0.55, Math.max(0.09, 16/Math.max(1,picks.length)));
+  const BATCH = 24, CHUNK = 8; // spawn each wave 8 spans/frame — 24 new compositor layers in one task stutters old phones
   let next = 0;
-  (function spawn(){
+  function clearChunk(){
+    for(let n=0; n<16 && olds.length; n++) olds.pop().remove();
+    if(olds.length) layer.__clearR = requestAnimationFrame(clearChunk);
+    else if(picks.length) spawnChunk(Math.min(picks.length, BATCH));
+  }
+  function spawnChunk(end){
     const frag = document.createDocumentFragment();
-    const end = Math.min(picks.length, next + BATCH);
-    for(; next < end; next++){
+    const lim = Math.min(end, next + CHUNK);
+    for(; next < lim; next++){
       const el = document.createElement('span');
       el.textContent = picks[next];
       el.className = 'nm ' + (next%2===0 ? 'l' : 'r');
@@ -636,8 +669,10 @@ function floatNames(layer, names, opts){
       frag.appendChild(el);
     }
     layer.appendChild(frag);
-    if(next < picks.length) layer.__waveT = setTimeout(spawn, BATCH*step*1000);
-  })();
+    if(next < end) layer.__waveR = requestAnimationFrame(()=>spawnChunk(end));
+    else if(next < picks.length) layer.__waveT = setTimeout(()=>spawnChunk(Math.min(picks.length, next + BATCH)), BATCH*step*1000);
+  }
+  clearChunk();
   return step;
 }
 function renderNames(i){
@@ -736,7 +771,11 @@ function setLetters(el, text, base){
     ).join('') + '</span>'
   ).join(' ') + '</span>';
 }
-function renderPanel(i, first){
+/* The swap is split into two frames so the letter cascade's first frames never
+   share a task with the faces/cards rebuild: renderHead is the light phase the
+   cascade rides on; renderBody (images + image-slot custom elements) lands in
+   its own later frame while the panel is still held at opacity 0 by .fade. */
+function renderHead(i, first){
   const d = D.days[i];
   const hd = HEAD[i] || {h:julyLabel(i), s:''};
   const over = `${julyLabel(i)}${i>31?' · '+label(i)+' 2024':''} · Day ${i-15} · ${d.t} ${d.t===1?'martyr':'martyrs'}`;
@@ -755,23 +794,28 @@ function renderPanel(i, first){
     $('#pSub').textContent = hd.s;
     head.classList.remove('out');
   }
+}
+function renderBody(i){
+  const d = D.days[i];
   const fr = $('#faceRow'); fr.innerHTML='';
   const known = d.imgs.filter(f=>f!==UNK);
   if(known.length){
     $('#faces').hidden = false;
+    const ffrag = document.createDocumentFragment();
     known.forEach((f,k)=>{
       const im=document.createElement('img');
       im.src=THUMB(f); im.alt='Martyr of '+label(i); im.loading='lazy'; im.decoding='async';
       im.style.animationDelay = (k*0.07)+'s';
-      fr.appendChild(im);
+      ffrag.appendChild(im);
     });
     const rest = d.t - known.length;
     if(rest > 0){
       const more = document.createElement('div');
       more.className = 'face-more';
       more.innerHTML = `<b>+${rest}</b><span>more lives</span>`;
-      fr.appendChild(more);
+      ffrag.appendChild(more);
     }
+    fr.appendChild(ffrag);
   } else $('#faces').hidden = true;
   const cw = $('#cards'); cw.innerHTML='';
   (STORIES[i]||[]).forEach((s,k)=>{
@@ -788,6 +832,7 @@ function renderPanel(i, first){
     cw.appendChild(c);
   });
 }
+function renderPanel(i, first){ renderHead(i, first); renderBody(i); }
 
 /* ---------- selection ---------- */
 function selectDay(i, first=false){
@@ -806,9 +851,16 @@ function selectDay(i, first=false){
   $('#dpPlacesLbl').textContent = nDist===1 ? 'district' : 'districts';
   hideTip();
   clearFinale();
-  renderDots(i);
+  /* the click frame commits only the cheap feedback (active button, head lift,
+     counter label); the ~190-circle SVG rebuild waits one frame so press
+     feedback paints instantly even on slow phones */
+  cancelAnimationFrame(selectDay._dotsR);
+  selectDay._dotsR = requestAnimationFrame(()=>renderDots(i));
   runCounter(i);
-  setTimeout(()=>renderNames(i), 80); // let dots paint first on slow devices
+  /* ambient names wait for the head cascade to finish (~830 ms) — their layer
+     creation must never share the main thread with the per-letter paint */
+  clearTimeout(selectDay._namesT);
+  selectDay._namesT = setTimeout(()=>renderNames(i), 900);
   if(i===36) runFinale();
   if(!first){
     const tlEl = document.querySelector('.tl-sticky');
@@ -821,13 +873,21 @@ function selectDay(i, first=false){
   const panel = $('#panel');
   if(first){ renderPanel(i, true); return; }
   clearTimeout(selectDay._panelT);
+  clearTimeout(selectDay._bodyT);
   const headEl = document.querySelector('.p-head');
   const hb = headEl.getBoundingClientRect();
   if(hb.bottom > 0 && hb.top < innerHeight){
     headEl.classList.add('out'); // visible old text lifts away during the swap
   }
   panel.classList.add('fade');
-  selectDay._panelT = setTimeout(()=>{ renderPanel(i); panel.classList.remove('fade'); }, 160);
+  /* two-phase swap: the head cascade launches alone at 160 ms (matching the
+     150 ms exit); the faces/cards rebuild lands 120 ms later in its own frame.
+     .fade holds the body at opacity 0 the whole time, so an interrupted phase
+     2 can never flash stale content — the next click just re-clears both. */
+  selectDay._panelT = setTimeout(()=>{
+    renderHead(i);
+    selectDay._bodyT = setTimeout(()=>{ renderBody(i); panel.classList.remove('fade'); }, 120);
+  }, 160);
 }
 $('#hc').textContent = D.total;
 </script>
